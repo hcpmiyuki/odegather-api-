@@ -48,8 +48,6 @@ async def build_index():
         logger.error(t)
         raise HTTPException(status_code=500, detail=t)
     
-        return {'error': t}
-    
 @app.get('/reccomend-users', status_code=200)
 async def build_index(user_id:str, recommend_user_count:int):
     try:
@@ -64,13 +62,12 @@ async def build_index(user_id:str, recommend_user_count:int):
             
             return {'results': recommended_user_ids}
         else:
-            return {'error': 'user not included in annoy index.'}
+            error_msg = 'user not included in annoy index.'
+            raise Exception(error_msg)
         
     except Exception as e:
         t = traceback.format_exception_only(type(e), e)
         logger.error(t)
         raise HTTPException(status_code=500, detail=t)
-    
-        return {'error': t}
 
     
