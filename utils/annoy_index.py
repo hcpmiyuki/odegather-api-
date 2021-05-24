@@ -41,20 +41,25 @@ class AnnoyIndexModel:
         blob.upload_from_string(index_dic)
         
     def load_gcs_files(self):
-        blobs = [b for b in self.bucket.list_blobs(prefix="{}/{}/".format(settings.BUCKET_NAME, settings.INDEX_DIC_SAVE_DIR))]
-        blob = self.bucket.blob(blobs[-1].name)
-        index_dic = {int(k): v for k, v in json.loads(blob.download_as_string().decode()).items()}
+        recent_index_blob = self.get_recent_blob_info(settings.INDEX_DIC_SAVE_DIR)
+        index_dic = {int(k): v for k, v in json.loads(recent_index_blob.download_as_string().decode()).items()}
         
-        blobs = [b for b in self.bucket.list_blobs(prefix="{}/{}/".format(settings.BUCKET_NAME, settings.MODEL_SAVE_DIR))]
-        blob = self.bucket.blob(blobs[-1].name)
+        recent_model_blob = self.get_recent_blob_info(settings.MODEL_SAVE_DIR)
         _, temp_local_file = tempfile.mkstemp(suffix=".ann")
-        blob.download_to_filename(temp_local_file)
+        recent_model_blob.download_to_filename(temp_local_file)
         annoy_index = AnnoyIndex(self.n_dim, metric='euclidean')
         annoy_index.load(temp_local_file)
         #一時ファイルを削除する。
         os.remove(temp_local_file)
         
         return annoy_index, index_dic
+    
+    def get_recent_blob_info(self, dirname):
+        blobs = [[b.name, b.updated] for b in self.bucket.list_blobs(prefix="{}/{}/".format(settings.BUCKET_NAME, dirname))]
+        recent_blob_name = sorted(blobs, key=lambda x: x[1])[-1][0]
+        recent_blob = self.bucket.blob(recent_blob_name)
+        
+        return recent_blob
         
         
         
