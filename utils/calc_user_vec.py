@@ -16,6 +16,9 @@ import numpy as np
 
 import settings
 
+
+    
+
 class Cleansing:
     def __call__(self, text):
         return self.cleansing_text(text)
@@ -84,7 +87,10 @@ class FireStoreOperator:
         self.user_vec_dic = {}
         
     def set_db(self):
-        firebase_admin.initialize_app()
+        # 初期化済みかを判定する
+        if not firebase_admin._apps:
+            # 初期済みでない場合は初期化処理を行う
+            firebase_admin.initialize_app()
         
         return firestore.client()
     
@@ -154,7 +160,7 @@ class FireStoreOperator:
             if vectors != []:
                 user_vec = np.mean(vectors, axis=0)
             else:
-                user_vec = None
+                user_vec = [0.] * 1000
                 
             self.user_vec_dic[user_id] = user_vec
             
